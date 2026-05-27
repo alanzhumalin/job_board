@@ -3,37 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ page_title or "Job Board" }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+  <title>{% block title %}Job Board{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=3">
 </head>
 <body>
   <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="/">
-        <span class="brand-mark">JB</span>
-        <span>Job Board</span>
-      </a>
-      <nav class="nav">
+    <div class="container nav">
+      <a class="brand" href="/">Job Board</a>
+      <nav>
         <a href="/jobs">Open Roles</a>
         <a href="/admin">Admin</a>
       </nav>
     </div>
   </header>
 
-  <main class="container main-content">
-    {% block content %}
-    <section class="card">
-      <h1>{{ content_title or "Job Board" }}</h1>
-      <p>{{ content_body or "Welcome." }}</p>
-    </section>
-    {% endblock %}
+  <main class="container">
+    {% block content %}{% endblock %}
   </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <span>FastAPI + PostgreSQL + Redis</span>
-      <span>Lean take-home MVP</span>
-    </div>
-  </footer>
 </body>
 </html>

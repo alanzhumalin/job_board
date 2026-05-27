@@ -42,6 +42,7 @@
       Employment type
       <select name="employment_type" required>
         {% set current_employment_type = job.employment_type if job else '' %}
+        <option value="" disabled {% if not current_employment_type %}selected{% endif %}>Select employment type</option>
         {% if current_employment_type and current_employment_type not in employment_options %}
         <option value="{{ current_employment_type }}" selected>{{ current_employment_type }}</option>
         {% endif %}

@@ -105,6 +105,34 @@ async def list_admin_jobs(session: AsyncSession) -> list[Job]:
     return list(result.scalars().all())
 
 
+async def list_jobs_for_bot(
+    session: AsyncSession, *, limit: int = 10
+) -> list[dict[str, Any]]:
+    result = await session.execute(
+        select(
+            Job.id,
+            Job.title,
+            Job.company,
+            Job.is_open,
+            func.count(Application.id).label("applications_count"),
+        )
+        .outerjoin(Application, Application.job_id == Job.id)
+        .group_by(Job.id)
+        .order_by(desc(Job.created_at))
+        .limit(limit)
+    )
+    return [
+        {
+            "id": row.id,
+            "title": row.title,
+            "company": row.company,
+            "is_open": row.is_open,
+            "applications_count": row.applications_count,
+        }
+        for row in result.all()
+    ]
+
+
 async def list_recent_applications(
     session: AsyncSession, *, limit: int = 10
 ) -> list[Application]:
@@ -140,6 +168,16 @@ async def list_job_applications(
         .order_by(desc(Application.created_at))
     )
     return job, list(result.scalars().all())
+
+
+async def set_job_open_status(
+    session: AsyncSession, job: Job, *, is_open: bool
+) -> Job:
+    job.is_open = is_open
+    await session.commit()
+    await session.refresh(job)
+    logger.info("Set job id=%s is_open=%s", job.id, job.is_open)
+    return job
 
 
 async def create_job(session: AsyncSession, payload: JobCreate) -> Job:

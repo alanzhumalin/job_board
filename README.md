@@ -30,6 +30,10 @@ A lean full-stack job board built with one FastAPI application serving both serv
   - sends via Brevo API if configured
   - falls back to SMTP if Brevo is not configured
   - logs the confirmation instead of crashing when no provider is configured
+- Telegram admin bot bonus:
+  - webhook-based Telegram bot inside the same FastAPI app
+  - admin allowlist via Telegram user IDs from env
+  - lets admins list jobs, inspect jobs, open/close/delete jobs, review applications, and create jobs interactively
 
 ## Tech stack
 
@@ -41,6 +45,7 @@ A lean full-stack job board built with one FastAPI application serving both serv
 - Redis asyncio client via `REDIS_URL`
 - PyJWT for admin authentication
 - `pydantic-settings` for configuration
+- Telegram Bot API via `httpx`
 
 ## PostgreSQL usage
 
@@ -102,6 +107,56 @@ After a successful application submission, the app attempts to send a confirmati
 - If neither Brevo nor SMTP is configured, the app logs the confirmation event and continues normally.
 - Railway outbound SMTP can fail with network errors, so Brevo API is the preferred provider on Railway.
 
+## Telegram bot bonus
+
+The app includes an optional Telegram admin bot that runs through the same FastAPI app using a webhook endpoint.
+
+- Webhook endpoint:
+  - `POST /telegram/webhook/{TELEGRAM_WEBHOOK_SECRET}`
+- Authorization:
+  - `TELEGRAM_ADMIN_IDS` is a comma-separated allowlist of Telegram user IDs
+  - unauthorized users get an access denied response
+  - `/whoami` works for everyone so you can discover your Telegram user ID
+- On startup, if these values are configured, the app attempts to register the webhook automatically:
+  - `TELEGRAM_BOT_TOKEN`
+  - `TELEGRAM_WEBHOOK_SECRET`
+  - `APP_BASE_URL`
+
+Supported commands:
+
+- `/start`
+- `/whoami`
+- `/help`
+- `/jobs`
+- `/job <id>`
+- `/open <id>`
+- `/close <id>`
+- `/delete <id>`
+- `/confirm_delete <id>`
+- `/apps <job_id>`
+- `/applications`
+- `/create`
+
+Interactive job creation:
+
+- `/create` stores temporary per-user bot state in Redis for 30 minutes
+- the bot asks for:
+  - title
+  - company
+  - location
+  - employment type
+  - salary range
+  - description
+  - requirements
+- type `cancel` at any time to abort
+
+Railway notes:
+
+- Telegram is implemented with HTTPS webhook delivery, not long polling
+- no second worker process is required
+- keep `APP_BASE_URL` set to your live Railway app URL
+- if Railway restarts, the app will try to re-register the webhook automatically on startup
+
 ## Environment variables
 
 Copy `.env.example` to `.env` and set the following:
@@ -122,6 +177,9 @@ SMTP_FROM_EMAIL=
 BREVO_API_KEY=
 BREVO_FROM_EMAIL=
 BREVO_FROM_NAME=Job Board
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
+TELEGRAM_ADMIN_IDS=
 APP_BASE_URL=http://localhost:8000
 ```
 
@@ -167,6 +225,10 @@ This project is designed for Railway without Docker.
    - `BREVO_API_KEY`
    - `BREVO_FROM_EMAIL`
    - `BREVO_FROM_NAME`
+   - optional Telegram bot values:
+     - `TELEGRAM_BOT_TOKEN`
+     - `TELEGRAM_WEBHOOK_SECRET`
+     - `TELEGRAM_ADMIN_IDS`
    - optional SMTP values
    - `APP_BASE_URL`
 6. Attach the Railway PostgreSQL `DATABASE_URL` and Railway Redis `REDIS_URL` service variables to the FastAPI web service.
@@ -178,6 +240,18 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 No `Dockerfile` or `docker-compose.yml` is required.
+
+Telegram bot setup with BotFather:
+
+1. Create a bot with BotFather and copy the bot token.
+2. Set:
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_WEBHOOK_SECRET`
+   - `TELEGRAM_ADMIN_IDS`
+   - `APP_BASE_URL`
+3. Send `/whoami` to your bot to get your Telegram user ID.
+4. Add that ID to `TELEGRAM_ADMIN_IDS`.
+5. Redeploy or restart the Railway app so startup can register the webhook automatically.
 
 ## Live URLs
 

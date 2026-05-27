@@ -11,7 +11,8 @@ from app.config import get_settings
 from app.crud import count_jobs, create_sample_job
 from app.database import Base, engine
 from app.redis_client import redis_client
-from app.routers import admin, api, public
+from app.routers import admin, api, public, telegram_bot
+from app.telegram_service import setup_webhook
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +43,8 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("Redis connection check failed")
 
+    await setup_webhook()
+
     yield
 
     await redis_client.aclose()
@@ -55,6 +58,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(public.router)
 app.include_router(admin.router)
 app.include_router(api.router)
+app.include_router(telegram_bot.router)
 
 
 @app.exception_handler(404)

@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     brevo_from_email: str | None = None
     brevo_from_name: str = "Job Board"
 
+    telegram_bot_token: str | None = None
+    telegram_webhook_secret: str | None = None
+    telegram_admin_ids: str | None = None
+
     jobs_cache_ttl_seconds: int = 60
     apply_lock_ttl_seconds: int = 300
     recent_applications_limit: int = 10

@@ -108,10 +108,10 @@ async def admin_create_job(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    job = await crud.create_job(session, payload)
+    await crud.create_job(session, payload)
     await invalidate_jobs_cache(redis)
     return RedirectResponse(
-        url=f"/admin/jobs/{job.id}/edit",
+        url="/admin",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 

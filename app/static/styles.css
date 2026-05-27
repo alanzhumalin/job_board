@@ -354,6 +354,12 @@ button:hover,
   color: var(--text);
 }
 
+.admin-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .button-danger,
 .actions-cell .danger-text {
   background: var(--danger-soft);
@@ -475,6 +481,62 @@ th {
   border-bottom: none;
 }
 
+.application-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.application-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 1rem;
+}
+
+.application-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.application-card-header h2 {
+  margin-bottom: 0.35rem;
+  font-size: 1.2rem;
+}
+
+.application-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+  padding-top: 0.25rem;
+}
+
+.application-meta div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.application-meta strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.cover-letter-box {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
 .auth-shell {
   display: flex;
   justify-content: center;
@@ -509,6 +571,12 @@ th {
   .hero {
     grid-template-columns: 1fr;
     padding: 1.5rem;
+  }
+
+  .application-card-header,
+  .admin-page-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .card {

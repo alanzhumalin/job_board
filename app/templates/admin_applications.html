@@ -7,42 +7,47 @@
     <h1>{% if job %}Applications for {{ job.title }}{% else %}All applications{% endif %}</h1>
     <p class="muted">Review submissions and follow up with candidates.</p>
   </div>
-  <a class="button button-secondary" href="/admin">Back to dashboard</a>
+  <div class="admin-page-actions">
+    <a class="button button-secondary" href="/admin">Back to dashboard</a>
+  </div>
 </section>
 
 <section class="card">
   {% if applications %}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Job</th>
-          <th>Submitted</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for application in applications %}
-        <tr>
-          <td>{{ application.full_name }}</td>
-          <td>{{ application.email }}</td>
-          <td>{{ application.phone or "-" }}</td>
-          <td>{{ application.job.title if application.job else "-" }}</td>
-          <td>{{ application.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
-        </tr>
-        {% if application.cover_letter %}
-        <tr>
-          <td colspan="5" class="cover-letter-cell">
-            <strong>Cover letter:</strong>
-            <div class="preserve-lines">{{ application.cover_letter }}</div>
-          </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="application-list">
+    {% for application in applications %}
+    <article class="application-card">
+      <div class="application-card-header">
+        <div>
+          <h2>{{ application.full_name }}</h2>
+          <p class="muted">{{ application.job.title if application.job else "-" }}</p>
+        </div>
+        <span class="pill">{{ application.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+      </div>
+
+      <div class="application-meta">
+        <div>
+          <strong>Email</strong>
+          <span>{{ application.email }}</span>
+        </div>
+        <div>
+          <strong>Phone</strong>
+          <span>{{ application.phone or "-" }}</span>
+        </div>
+        <div>
+          <strong>Job</strong>
+          <span>{{ application.job.title if application.job else "-" }}</span>
+        </div>
+      </div>
+
+      {% if application.cover_letter %}
+      <div class="cover-letter-box">
+        <strong>Cover letter</strong>
+        <div class="preserve-lines">{{ application.cover_letter }}</div>
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
   </div>
   {% else %}
   <p>No applications found.</p>

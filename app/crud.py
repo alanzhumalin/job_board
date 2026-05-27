@@ -105,6 +105,16 @@ async def list_admin_jobs(session: AsyncSession) -> list[Job]:
     return list(result.scalars().all())
 
 
+async def list_jobs_for_bot(
+    session: AsyncSession, *, limit: int = 10
+) -> list[dict[str, Any]]:
+    result = await session.execute(
+        select(Job).order_by(desc(Job.created_at)).limit(limit)
+    )
+    jobs = list(result.scalars().all())
+    return [job_to_view(job) for job in jobs]
+
+
 async def get_or_create_telegram_admin(
     session: AsyncSession,
     *,
@@ -226,6 +236,16 @@ async def toggle_job_open(session: AsyncSession, job: Job) -> Job:
     await session.commit()
     await session.refresh(job)
     logger.info("Toggled job id=%s is_open=%s", job.id, job.is_open)
+    return job
+
+
+async def set_job_open_status(
+    session: AsyncSession, job: Job, *, is_open: bool
+) -> Job:
+    job.is_open = is_open
+    await session.commit()
+    await session.refresh(job)
+    logger.info("Set job id=%s is_open=%s", job.id, job.is_open)
     return job
 
 

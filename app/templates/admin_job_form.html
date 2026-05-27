@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>{{ "Edit job" if job else "Create job" }}</h1>
+  </div>
+  <a class="button button-secondary" href="/admin">Back to dashboard</a>
+</section>
+
+<section class="card">
+  {% if error %}
+  <div class="alert error">{{ error }}</div>
+  {% endif %}
+  <form method="post" action="{{ '/admin/jobs/' ~ job.id ~ '/edit' if job else '/admin/jobs' }}" class="form-stack">
+    <label>
+      Title
+      <input type="text" name="title" value="{{ job.title if job else '' }}" required>
+    </label>
+    <label>
+      Company
+      <input type="text" name="company" value="{{ job.company if job else '' }}" required>
+    </label>
+    <label>
+      Location
+      <input type="text" name="location" value="{{ job.location if job else '' }}" required>
+    </label>
+    <label>
+      Employment type
+      <input type="text" name="employment_type" value="{{ job.employment_type if job else '' }}" required>
+    </label>
+    <label>
+      Salary range
+      <input type="text" name="salary_range" value="{{ job.salary_range if job and job.salary_range else '' }}">
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" name="is_open" value="true" {% if job is none or job.is_open %}checked{% endif %}>
+      Open for applications
+    </label>
+    <label>
+      Description
+      <textarea name="description" rows="8" required>{{ job.description if job else '' }}</textarea>
+    </label>
+    <label>
+      Requirements
+      <textarea name="requirements" rows="8" required>{{ job.requirements if job else '' }}</textarea>
+    </label>
+    <button class="button" type="submit">{{ "Save changes" if job else "Create job" }}</button>
+  </form>
+</section>
+{% endblock %}

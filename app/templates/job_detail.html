@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="detail-layout">
+  <article class="card">
+    <p class="eyebrow">Open role</p>
+    <h1>{{ job.title }}</h1>
+    <p class="muted">{{ job.company }} · {{ job.location }} · {{ job.employment_type }}</p>
+    {% if job.salary_range %}
+    <p class="muted">Salary range: {{ job.salary_range }}</p>
+    {% endif %}
+
+    <h2>Description</h2>
+    <p class="preserve-lines">{{ job.description }}</p>
+
+    <h2>Requirements</h2>
+    <p class="preserve-lines">{{ job.requirements }}</p>
+  </article>
+
+  <aside class="card">
+    <h2>Apply now</h2>
+    <p class="muted">Submit a simple application for this role.</p>
+    {% if error %}
+    <div class="alert error">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/jobs/{{ job.id }}/apply" class="form-stack">
+      <label>
+        Full name
+        <input type="text" name="full_name" value="{{ form_data.full_name or '' }}" required>
+      </label>
+      <label>
+        Email
+        <input type="email" name="email" value="{{ form_data.email or '' }}" required>
+      </label>
+      <label>
+        Phone
+        <input type="text" name="phone" value="{{ form_data.phone or '' }}">
+      </label>
+      <label>
+        Cover letter
+        <textarea name="cover_letter" rows="8">{{ form_data.cover_letter or '' }}</textarea>
+      </label>
+      <button class="button" type="submit">Submit application</button>
+    </form>
+  </aside>
+</section>
+{% endblock %}

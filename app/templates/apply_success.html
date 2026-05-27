@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card success-card">
+  <p class="eyebrow">Application submitted</p>
+  <h1>Thanks for applying</h1>
+  <p>Your application for <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong> has been recorded.</p>
+  <p class="muted">If SMTP is configured, the applicant also receives a confirmation email. Otherwise the confirmation is logged by the app.</p>
+  <div class="action-row">
+    <a class="button" href="/jobs">Back to jobs</a>
+    <a class="button button-secondary" href="/jobs/{{ job.id }}">View role</a>
+  </div>
+</section>
+{% endblock %}

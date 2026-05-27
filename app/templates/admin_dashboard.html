@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Dashboard</h1>
+  </div>
+  <div class="action-row">
+    <a class="button" href="/admin/jobs/new">Create job</a>
+    <a class="button button-secondary" href="/admin/applications">View all applications</a>
+    <form method="post" action="/admin/logout">
+      <button class="button button-secondary" type="submit">Logout</button>
+    </form>
+  </div>
+</section>
+
+<section class="split-grid">
+  <article class="card">
+    <h2>Jobs</h2>
+    {% if jobs %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td>{{ job.title }}</td>
+            <td>{{ job.company }}</td>
+            <td>{{ "Open" if job.is_open else "Closed" }}</td>
+            <td class="actions-cell">
+              <a href="/admin/jobs/{{ job.id }}/edit">Edit</a>
+              <a href="/admin/jobs/{{ job.id }}/applications">Applications</a>
+              <form method="post" action="/admin/jobs/{{ job.id }}/toggle">
+                <button type="submit">{{ "Close" if job.is_open else "Open" }}</button>
+              </form>
+              <form method="post" action="/admin/jobs/{{ job.id }}/delete" onsubmit="return confirm('Delete this job?');">
+                <button type="submit" class="danger-text">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p>No jobs found.</p>
+    {% endif %}
+  </article>
+
+  <article class="card">
+    <h2>Recent applications</h2>
+    {% if applications %}
+    <div class="list-stack">
+      {% for application in applications %}
+      <div class="list-item">
+        <strong>{{ application.full_name }}</strong>
+        <span>{{ application.email }}</span>
+        <span class="muted">{{ application.job.title if application.job else "Unknown job" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p>No applications yet.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

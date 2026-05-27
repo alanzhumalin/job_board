@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Hiring now</p>
+    <h1>{{ page_title }}</h1>
+    <p class="lede">Browse currently open roles and apply directly through the site.</p>
+  </div>
+</section>
+
+<section class="grid">
+  {% if jobs %}
+    {% for job in jobs %}
+    <article class="card job-card">
+      <div class="job-card-top">
+        <div>
+          <h2><a href="/jobs/{{ job.id }}">{{ job.title }}</a></h2>
+          <p class="muted">{{ job.company }} · {{ job.location }}</p>
+        </div>
+        <span class="pill">{{ job.employment_type }}</span>
+      </div>
+      <p>{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
+      {% if job.salary_range %}
+      <p class="muted">Salary: {{ job.salary_range }}</p>
+      {% endif %}
+      <a class="button" href="/jobs/{{ job.id }}">View details</a>
+    </article>
+    {% endfor %}
+  {% else %}
+    <article class="card">
+      <h2>No open jobs</h2>
+      <p>There are no open roles right now. Check back later.</p>
+    </article>
+  {% endif %}
+</section>
+{% endblock %}

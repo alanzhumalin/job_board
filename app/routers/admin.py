@@ -184,7 +184,7 @@ async def admin_edit_job(
     await crud.update_job(session, job, payload)
     await invalidate_jobs_cache(redis)
     return RedirectResponse(
-        url=f"/admin/jobs/{job_id}/edit",
+        url="/admin",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 

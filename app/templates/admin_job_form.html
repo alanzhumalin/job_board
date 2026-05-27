@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set employment_options = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Internship",
+  "Temporary",
+  "Freelance",
+  "Remote",
+  "Hybrid",
+  "On-site"
+] %}
 <section class="page-head">
   <div>
     <p class="eyebrow">Admin</p>
@@ -29,7 +40,15 @@
     </label>
     <label>
       Employment type
-      <input type="text" name="employment_type" value="{{ job.employment_type if job else '' }}" required>
+      <select name="employment_type" required>
+        {% set current_employment_type = job.employment_type if job else '' %}
+        {% if current_employment_type and current_employment_type not in employment_options %}
+        <option value="{{ current_employment_type }}" selected>{{ current_employment_type }}</option>
+        {% endif %}
+        {% for option in employment_options %}
+        <option value="{{ option }}" {% if current_employment_type == option %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+      </select>
     </label>
     <label>
       Salary range

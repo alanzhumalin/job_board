@@ -8,7 +8,7 @@ A lean full-stack job board built with one FastAPI application serving both serv
 
 - Public HTML pages:
   - `GET /`
-  - `GET /jobs`
+  - `GET /jobs` redirects to `/`
   - `GET /jobs/{job_id}`
   - `POST /jobs/{job_id}/apply`
   - success page after submission
@@ -53,6 +53,7 @@ PostgreSQL is the primary application database.
 
 - `jobs` table stores job postings
 - `applications` table stores submitted applications
+- `telegram_admins` table stores Telegram accounts linked from the admin dashboard
 - `applications.job_id` references `jobs.id`
 - unique constraint on `(job_id, email)` prevents duplicate applications to the same role from the same email
 - emails are normalized to lowercase before insert
@@ -60,7 +61,7 @@ PostgreSQL is the primary application database.
 
 ## Redis usage
 
-Redis is used in two meaningful ways.
+Redis is used in several meaningful ways.
 
 1. Public jobs cache
 - cache key format:
@@ -78,11 +79,30 @@ Redis is used in two meaningful ways.
 - prevents repeated rapid submissions for the same job/email pair
 - PostgreSQL uniqueness is still the final duplicate guard
 
+3. Telegram deep-link bind tokens
+- one-time Redis token used when an authenticated admin clicks `Connect Telegram`
+- key format:
+  - `telegram:bind:{token}`
+- TTL is `10` minutes
+
+4. Telegram interactive create flow state
+- per-admin Redis state for `/create`
+- key format:
+  - `telegram:create_job:{telegram_user_id}`
+- TTL is `30` minutes
+
+5. Telegram delete confirmation
+- short-lived confirmation for `/delete` -> `/confirm_delete`
+- key format:
+  - `telegram:delete:{telegram_user_id}:{job_id}`
+- TTL is `5` minutes
+
 ## Admin auth explanation
 
 - Admin credentials come from environment variables:
   - `ADMIN_USERNAME`
   - `ADMIN_PASSWORD`
+- There is no admin registration flow; this app assumes a single environment-configured admin.
 - Login creates a JWT using `JWT_SECRET`
 - For browser admin pages, the JWT is stored in an `HttpOnly` cookie
 - Protected admin API endpoints also accept `Authorization: Bearer <token>`
@@ -218,6 +238,7 @@ uvicorn app.main:app --reload
 - Public UI: `http://localhost:8000/`
 - Admin login: `http://localhost:8000/admin/login`
 - API docs: `http://localhost:8000/docs`
+- Public listing note: `/jobs` redirects to `/`
 
 ## Railway deployment instructions
 
@@ -235,6 +256,7 @@ This project is designed for Railway without Docker.
    - `ADMIN_PASSWORD`
    - `JWT_SECRET`
    - `JWT_EXPIRE_HOURS`
+   - `APP_BASE_URL`
    - `BREVO_API_KEY`
    - `BREVO_FROM_EMAIL`
    - `BREVO_FROM_NAME`
@@ -243,10 +265,12 @@ This project is designed for Railway without Docker.
      - `TELEGRAM_BOT_USERNAME`
      - `TELEGRAM_WEBHOOK_SECRET`
    - optional SMTP values
-   - `APP_BASE_URL`
 6. Attach the Railway PostgreSQL `DATABASE_URL` and Railway Redis `REDIS_URL` service variables to the FastAPI web service.
-7. Railway will install dependencies from `requirements.txt`.
-8. `railway.json` config starts the app with:
+7. Use strong values for `ADMIN_PASSWORD` and `JWT_SECRET`; do not deploy the placeholder values from `.env.example`.
+8. Make sure Railway generates a public domain and use that exact HTTPS URL for `APP_BASE_URL`.
+9. For the submission, capture a Railway dashboard screenshot showing the FastAPI app, PostgreSQL service, and Redis service.
+10. Railway will install dependencies from `requirements.txt`.
+11. `railway.json` config starts the app with:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -270,16 +294,18 @@ Telegram setup with BotFather:
 
 ## Live URLs
 
-- Public app: `https://your-app-url.railway.app`
-- Admin login: `https://your-app-url.railway.app/admin/login`
-- API docs: `https://your-app-url.railway.app/docs`
+- GitHub repo: `https://github.com/alanzhumalin/job_board`
+- Public app: `https://jobboard-production-e62e.up.railway.app/`
+- Admin login: `https://jobboard-production-e62e.up.railway.app/admin/login`
+- API docs: `https://jobboard-production-e62e.up.railway.app/docs`
 
 ## Submission checklist
 
 - GitHub repo URL
 - Live frontend URL
 - Backend `/docs` URL
-- Railway dashboard screenshot showing the FastAPI, PostgreSQL, and Redis services
+- Admin login URL
+- Railway dashboard screenshot showing the FastAPI app, PostgreSQL, and Redis services
 
 ## Known limitations
 
@@ -292,5 +318,9 @@ Telegram setup with BotFather:
 - Add CSRF protection for admin form posts
 - Add Alembic migrations for production schema evolution
 - Add richer email templates and background job delivery
+- Add a background email queue / retry workflow
+- Add better monitoring and alerting for webhooks and email delivery
+- Use a verified custom sender domain for production email delivery
 - Add search/filtering for jobs and applications
 - Improve admin UX with flash messages and validation summaries
+- Add richer Telegram bot UX with inline buttons and pagination

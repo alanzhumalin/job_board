@@ -7,12 +7,9 @@
     <h1>Dashboard</h1>
     <p class="muted">Manage the active hiring pipeline from one place.</p>
   </div>
-  <div class="action-row">
+  <div class="dashboard-actions admin-page-actions">
     <a class="button" href="/admin/jobs/new">Create job</a>
     <a class="button button-secondary" href="/admin/applications">View all applications</a>
-    <form method="post" action="/admin/logout">
-      <button class="button button-secondary" type="submit">Logout</button>
-    </form>
   </div>
 </section>
 
@@ -39,15 +36,17 @@
             <td>{{ job.title }}</td>
             <td>{{ job.company }}</td>
             <td>{{ "Open" if job.is_open else "Closed" }}</td>
-            <td class="actions-cell">
-              <a href="/admin/jobs/{{ job.id }}/edit">Edit</a>
-              <a href="/admin/jobs/{{ job.id }}/applications">Applications</a>
-              <form method="post" action="/admin/jobs/{{ job.id }}/toggle">
-                <button type="submit">{{ "Close" if job.is_open else "Open" }}</button>
-              </form>
-              <form method="post" action="/admin/jobs/{{ job.id }}/delete" onsubmit="return confirm('Delete this job?');">
-                <button type="submit" class="danger-text">Delete</button>
-              </form>
+            <td>
+              <div class="table-actions">
+                <a class="button small secondary" href="/admin/jobs/{{ job.id }}/edit">Edit</a>
+                <a class="button small secondary" href="/admin/jobs/{{ job.id }}/applications">Applications</a>
+                <form method="post" action="/admin/jobs/{{ job.id }}/toggle">
+                  <button type="submit" class="button small secondary">{{ "Close" if job.is_open else "Open" }}</button>
+                </form>
+                <form method="post" action="/admin/jobs/{{ job.id }}/delete" onsubmit="return confirm('Delete this job?');">
+                  <button type="submit" class="button small danger">Delete</button>
+                </form>
+              </div>
             </td>
           </tr>
           {% endfor %}
@@ -60,16 +59,16 @@
   </article>
 
   <article class="card">
-    <div class="section-head">
+    <div class="card-title-row">
       <h2>Recent applications</h2>
       <span class="pill">{{ applications|length }} recent</span>
     </div>
     {% if applications %}
-    <div class="list-stack">
+    <div class="recent-application-list">
       {% for application in applications %}
-      <div class="list-item">
+      <div class="recent-application-item">
         <strong>{{ application.full_name }}</strong>
-        <span>{{ application.email }}</span>
+        <span class="muted">{{ application.email }}</span>
         <span class="muted">{{ application.job.title if application.job else "Unknown job" }}</span>
       </div>
       {% endfor %}

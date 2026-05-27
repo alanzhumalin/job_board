@@ -20,17 +20,19 @@
   {% if jobs %}
     {% for job in jobs %}
     <article class="card job-card">
-      <div class="job-card-top">
-        <div>
-          <h2><a href="/jobs/{{ job.id }}">{{ job.title }}</a></h2>
-          <p class="muted">{{ job.company }} · {{ job.location }}</p>
+      <div class="job-card-body">
+        <div class="job-card-top">
+          <div>
+            <h2><a href="/jobs/{{ job.id }}">{{ job.title }}</a></h2>
+            <p class="muted">{{ job.company }} · {{ job.location }}</p>
+          </div>
+          <span class="pill">{{ job.employment_type }}</span>
         </div>
-        <span class="pill">{{ job.employment_type }}</span>
+        <p class="job-snippet">{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
+        {% if job.salary_range %}
+        <p class="muted">Salary: {{ job.salary_range }}</p>
+        {% endif %}
       </div>
-      <p class="job-snippet">{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
-      {% if job.salary_range %}
-      <p class="muted">Salary: {{ job.salary_range }}</p>
-      {% endif %}
       <div class="card-footer">
         <span class="muted">Applications open</span>
         <a class="button" href="/jobs/{{ job.id }}">View details</a>

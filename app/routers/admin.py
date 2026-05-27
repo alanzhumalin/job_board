@@ -17,6 +17,7 @@ from app.cache import invalidate_jobs_cache
 from app.config import get_settings
 from app.dependencies import db_session_dependency, require_admin
 from app.redis_client import get_redis
+from app.telegram_service import create_connect_link
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="app/templates")
@@ -77,6 +78,29 @@ async def admin_dashboard(
         "admin_dashboard.html",
         {"request": request, "jobs": jobs_view, "applications": applications_view},
     )
+
+
+@router.get("/telegram/connect")
+async def admin_telegram_connect(_: str = Depends(require_admin)):
+    if not (
+        settings.telegram_bot_token
+        and settings.telegram_bot_username
+        and settings.telegram_webhook_secret
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram bot is not configured.",
+        )
+
+    try:
+        deep_link = await create_connect_link(settings.admin_username)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram connection is temporarily unavailable.",
+        )
+
+    return RedirectResponse(url=deep_link, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/jobs/new")

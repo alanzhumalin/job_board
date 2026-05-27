@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Application, Job
+from app.models import Application, Job, TelegramAdmin
 from app.schemas import ApplicationCreate, JobCreate, JobUpdate
 
 logger = logging.getLogger(__name__)
@@ -105,32 +105,42 @@ async def list_admin_jobs(session: AsyncSession) -> list[Job]:
     return list(result.scalars().all())
 
 
-async def list_jobs_for_bot(
-    session: AsyncSession, *, limit: int = 10
-) -> list[dict[str, Any]]:
+async def get_or_create_telegram_admin(
+    session: AsyncSession,
+    *,
+    telegram_user_id: int,
+    username: str | None,
+    first_name: str | None,
+) -> TelegramAdmin:
     result = await session.execute(
-        select(
-            Job.id,
-            Job.title,
-            Job.company,
-            Job.is_open,
-            func.count(Application.id).label("applications_count"),
-        )
-        .outerjoin(Application, Application.job_id == Job.id)
-        .group_by(Job.id)
-        .order_by(desc(Job.created_at))
-        .limit(limit)
+        select(TelegramAdmin).where(TelegramAdmin.telegram_user_id == telegram_user_id)
     )
-    return [
-        {
-            "id": row.id,
-            "title": row.title,
-            "company": row.company,
-            "is_open": row.is_open,
-            "applications_count": row.applications_count,
-        }
-        for row in result.all()
-    ]
+    existing = result.scalar_one_or_none()
+    if existing:
+        existing.username = username
+        existing.first_name = first_name
+        await session.commit()
+        await session.refresh(existing)
+        logger.info("Updated Telegram admin link for telegram_user_id=%s", telegram_user_id)
+        return existing
+
+    admin = TelegramAdmin(
+        telegram_user_id=telegram_user_id,
+        username=username,
+        first_name=first_name,
+    )
+    session.add(admin)
+    await session.commit()
+    await session.refresh(admin)
+    logger.info("Created Telegram admin link for telegram_user_id=%s", telegram_user_id)
+    return admin
+
+
+async def is_telegram_admin(session: AsyncSession, telegram_user_id: int) -> bool:
+    result = await session.execute(
+        select(TelegramAdmin.id).where(TelegramAdmin.telegram_user_id == telegram_user_id)
+    )
+    return result.scalar_one_or_none() is not None
 
 
 async def list_recent_applications(
@@ -170,14 +180,27 @@ async def list_job_applications(
     return job, list(result.scalars().all())
 
 
-async def set_job_open_status(
-    session: AsyncSession, job: Job, *, is_open: bool
-) -> Job:
-    job.is_open = is_open
-    await session.commit()
-    await session.refresh(job)
-    logger.info("Set job id=%s is_open=%s", job.id, job.is_open)
-    return job
+async def get_job_for_bot(session: AsyncSession, job_id: int) -> dict[str, Any] | None:
+    job = await get_job_any_status(session, job_id)
+    if not job:
+        return None
+    return job_to_view(job)
+
+
+async def list_latest_applications_for_bot(
+    session: AsyncSession, *, limit: int = 10
+) -> list[dict[str, Any]]:
+    applications = await list_recent_applications(session, limit=limit)
+    return [application_to_view(application) for application in applications]
+
+
+async def list_applications_for_job_for_bot(
+    session: AsyncSession, job_id: int
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    job, applications = await list_job_applications(session, job_id)
+    if not job:
+        return None, []
+    return job_to_view(job), [application_to_view(application) for application in applications]
 
 
 async def create_job(session: AsyncSession, payload: JobCreate) -> Job:
@@ -210,6 +233,18 @@ async def delete_job(session: AsyncSession, job: Job) -> None:
     await session.delete(job)
     await session.commit()
     logger.info("Deleted job id=%s", job.id)
+
+
+async def delete_job_by_id(session: AsyncSession, job_id: int) -> bool:
+    job = await get_job_any_status(session, job_id)
+    if not job:
+        return False
+    await delete_job(session, job)
+    return True
+
+
+async def create_job_from_bot(session: AsyncSession, payload: JobCreate) -> Job:
+    return await create_job(session, payload)
 
 
 async def create_application(

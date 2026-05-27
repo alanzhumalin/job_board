@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -7,7 +6,6 @@ from app.config import get_settings
 from app.telegram_service import process_update
 
 router = APIRouter(prefix="/telegram", tags=["telegram"])
-logger = logging.getLogger(__name__)
 settings = get_settings()
 
 

@@ -32,8 +32,8 @@ A lean full-stack job board built with one FastAPI application serving both serv
   - logs the confirmation instead of crashing when no provider is configured
 - Telegram admin bot bonus:
   - webhook-based Telegram bot inside the same FastAPI app
-  - admin allowlist via Telegram user IDs from env
-  - lets admins list jobs, inspect jobs, open/close/delete jobs, review applications, and create jobs interactively
+  - secure deep-link connection from the admin dashboard
+  - lets connected admins manage jobs and review applications from Telegram
 
 ## Tech stack
 
@@ -111,16 +111,28 @@ After a successful application submission, the app attempts to send a confirmati
 
 The app includes an optional Telegram admin bot that runs through the same FastAPI app using a webhook endpoint.
 
-- Webhook endpoint:
-  - `POST /telegram/webhook/{TELEGRAM_WEBHOOK_SECRET}`
-- Authorization:
-  - `TELEGRAM_ADMIN_IDS` is a comma-separated allowlist of Telegram user IDs
-  - unauthorized users get an access denied response
-  - `/whoami` works for everyone so you can discover your Telegram user ID
-- On startup, if these values are configured, the app attempts to register the webhook automatically:
-  - `TELEGRAM_BOT_TOKEN`
-  - `TELEGRAM_WEBHOOK_SECRET`
-  - `APP_BASE_URL`
+How connection works:
+
+1. Log in to the admin dashboard in the browser.
+2. Click `Connect Telegram`.
+3. The app creates a one-time bind token in Redis and redirects to a Telegram deep link:
+   - `https://t.me/{TELEGRAM_BOT_USERNAME}?start=connect_<token>`
+4. Press `Start` in Telegram.
+5. The bot validates the bind token and stores your Telegram user as an authorized admin in PostgreSQL.
+
+Webhook endpoint:
+
+- `POST /telegram/webhook/{TELEGRAM_WEBHOOK_SECRET}`
+
+Authorization behavior:
+
+- `/whoami` always works and shows:
+  - Telegram user id
+  - username
+  - connected yes/no
+- Other admin commands require a connected Telegram account.
+- If not connected, the bot replies:
+  - `Access denied. Open the admin dashboard and click Connect Telegram, or send /whoami to see your Telegram user ID.`
 
 Supported commands:
 
@@ -133,14 +145,14 @@ Supported commands:
 - `/close <id>`
 - `/delete <id>`
 - `/confirm_delete <id>`
-- `/apps <job_id>`
 - `/applications`
+- `/apps <job_id>`
 - `/create`
 
 Interactive job creation:
 
-- `/create` stores temporary per-user bot state in Redis for 30 minutes
-- the bot asks for:
+- `/create` stores temporary per-user state in Redis for 30 minutes
+- The bot asks for:
   - title
   - company
   - location
@@ -148,14 +160,15 @@ Interactive job creation:
   - salary range
   - description
   - requirements
-- type `cancel` at any time to abort
+- Type `cancel` at any step to abort
+- Type `yes` at the final confirmation step to create the job
 
 Railway notes:
 
 - Telegram is implemented with HTTPS webhook delivery, not long polling
-- no second worker process is required
-- keep `APP_BASE_URL` set to your live Railway app URL
-- if Railway restarts, the app will try to re-register the webhook automatically on startup
+- No second worker process is required
+- On startup, if configured, the app attempts to register the Telegram webhook automatically
+- `APP_BASE_URL` must be your live Railway domain
 
 ## Environment variables
 
@@ -178,8 +191,8 @@ BREVO_API_KEY=
 BREVO_FROM_EMAIL=
 BREVO_FROM_NAME=Job Board
 TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=
 TELEGRAM_WEBHOOK_SECRET=
-TELEGRAM_ADMIN_IDS=
 APP_BASE_URL=http://localhost:8000
 ```
 
@@ -227,8 +240,8 @@ This project is designed for Railway without Docker.
    - `BREVO_FROM_NAME`
    - optional Telegram bot values:
      - `TELEGRAM_BOT_TOKEN`
+     - `TELEGRAM_BOT_USERNAME`
      - `TELEGRAM_WEBHOOK_SECRET`
-     - `TELEGRAM_ADMIN_IDS`
    - optional SMTP values
    - `APP_BASE_URL`
 6. Attach the Railway PostgreSQL `DATABASE_URL` and Railway Redis `REDIS_URL` service variables to the FastAPI web service.
@@ -241,17 +254,19 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
 No `Dockerfile` or `docker-compose.yml` is required.
 
-Telegram bot setup with BotFather:
+Telegram setup with BotFather:
 
 1. Create a bot with BotFather and copy the bot token.
-2. Set:
+2. Note the bot username from BotFather.
+3. Set:
    - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_BOT_USERNAME`
    - `TELEGRAM_WEBHOOK_SECRET`
-   - `TELEGRAM_ADMIN_IDS`
    - `APP_BASE_URL`
-3. Send `/whoami` to your bot to get your Telegram user ID.
-4. Add that ID to `TELEGRAM_ADMIN_IDS`.
-5. Redeploy or restart the Railway app so startup can register the webhook automatically.
+4. Deploy or restart the Railway app.
+5. Log in to the admin dashboard and click `Connect Telegram`.
+6. Press `Start` in the Telegram chat that opens.
+7. Send `/help` to confirm the bot is connected.
 
 ## Live URLs
 

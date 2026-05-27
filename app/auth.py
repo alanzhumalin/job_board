@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 import hmac
 
 import jwt
-from fastapi import Response
+from fastapi import Request, Response
 
 from app.config import get_settings
 
@@ -52,3 +52,24 @@ def set_auth_cookie(response: Response, token: str) -> None:
 
 def clear_auth_cookie(response: Response) -> None:
     response.delete_cookie(settings.jwt_cookie_name)
+
+
+def get_optional_admin_from_request(request: Request) -> str | None:
+    token = request.cookies.get(settings.jwt_cookie_name)
+    if not token:
+        return None
+
+    try:
+        payload = decode_token(token)
+    except (jwt.PyJWTError, ValueError):
+        return None
+
+    subject = payload.get("sub")
+    if subject != settings.admin_username:
+        return None
+
+    return subject
+
+
+def is_admin_authenticated(request: Request) -> bool:
+    return get_optional_admin_from_request(request) is not None

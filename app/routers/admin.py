@@ -6,7 +6,13 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas
-from app.auth import clear_auth_cookie, create_access_token, set_auth_cookie, verify_admin_credentials
+from app.auth import (
+    clear_auth_cookie,
+    create_access_token,
+    get_optional_admin_from_request,
+    set_auth_cookie,
+    verify_admin_credentials,
+)
 from app.cache import invalidate_jobs_cache
 from app.config import get_settings
 from app.dependencies import db_session_dependency, require_admin
@@ -14,6 +20,7 @@ from app.redis_client import get_redis
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["is_admin_authenticated"] = get_optional_admin_from_request
 settings = get_settings()
 
 
@@ -23,6 +30,9 @@ def _job_form_context(request: Request, job=None, error: str | None = None):
 
 @router.get("/login")
 async def admin_login_page(request: Request):
+    if get_optional_admin_from_request(request):
+        return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+
     return templates.TemplateResponse(
         "admin_login.html",
         {"request": request, "error": None},

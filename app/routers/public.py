@@ -8,11 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
 from app.cache import acquire_application_lock, get_cached_jobs_list, set_cached_jobs_list
 from app.dependencies import db_session_dependency
+from app.auth import get_optional_admin_from_request
 from app.email_service import send_application_confirmation
 from app.redis_client import get_redis
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["is_admin_authenticated"] = get_optional_admin_from_request
 
 
 def render_error(

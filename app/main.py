@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.auth import get_optional_admin_from_request
 from app.config import get_settings
 from app.crud import count_jobs, create_sample_job
 from app.database import Base, engine
@@ -19,6 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 settings = get_settings()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["is_admin_authenticated"] = get_optional_admin_from_request
 
 
 @asynccontextmanager

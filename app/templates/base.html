@@ -4,14 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Job Board{% endblock %}</title>
-  <link rel="stylesheet" href="/static/styles.css?v=6">
+  <link rel="stylesheet" href="/static/styles.css?v=7">
 </head>
 <body>
   <header class="site-header">
     <div class="container nav">
       <a class="brand" href="/">Job Board</a>
       <nav>
+        {% if is_admin_authenticated(request) %}
+        <a href="/admin">Dashboard</a>
+        <form method="post" action="/admin/logout" class="nav-logout-form">
+          <button type="submit" class="nav-logout-button">Logout</button>
+        </form>
+        {% else %}
         <a href="/admin/login">Login</a>
+        {% endif %}
       </nav>
     </div>
   </header>

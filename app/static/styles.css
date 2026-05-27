@@ -104,6 +104,10 @@ p {
   gap: 0.75rem;
 }
 
+.nav-logout-form {
+  margin: 0;
+}
+
 .nav nav a {
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
@@ -112,6 +116,23 @@ p {
 
 .nav nav a:hover {
   background: var(--primary-soft);
+}
+
+.nav-logout-button {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.nav-logout-button:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+  transform: none;
 }
 
 .brand {
@@ -577,6 +598,11 @@ th {
   .admin-page-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .nav-logout-form,
+  .nav-logout-button {
+    width: 100%;
   }
 
   .card {

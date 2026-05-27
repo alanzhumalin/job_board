@@ -20,6 +20,7 @@ from app.redis_client import get_redis
 from app.telegram_service import create_connect_link
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+auth_router = APIRouter(tags=["admin-auth"])
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["is_admin_authenticated"] = get_optional_admin_from_request
 settings = get_settings()
@@ -29,8 +30,8 @@ def _job_form_context(request: Request, job=None, error: str | None = None):
     return {"request": request, "job": job, "error": error}
 
 
-@router.get("/login")
-async def admin_login_page(request: Request):
+@auth_router.get("/login")
+async def public_login_page(request: Request):
     if get_optional_admin_from_request(request):
         return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -40,6 +41,12 @@ async def admin_login_page(request: Request):
     )
 
 
+@router.get("/login")
+async def admin_login_page():
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@auth_router.post("/login")
 @router.post("/login")
 async def admin_login(request: Request, username: str = Form(...), password: str = Form(...)):
     if not verify_admin_credentials(username, password):
@@ -57,7 +64,7 @@ async def admin_login(request: Request, username: str = Form(...), password: str
 
 @router.post("/logout")
 async def admin_logout():
-    response = RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
     clear_auth_cookie(response)
     return response
 

@@ -56,6 +56,7 @@ app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(public.router)
+app.include_router(admin.auth_router)
 app.include_router(admin.router)
 app.include_router(api.router)
 app.include_router(telegram_bot.router)
@@ -80,7 +81,7 @@ async def not_found_handler(request: Request, exc):
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 401 and request.url.path.startswith("/admin"):
-        return RedirectResponse(url="/admin/login", status_code=303)
+        return RedirectResponse(url="/login", status_code=303)
     if request.url.path.startswith("/api/"):
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     return templates.TemplateResponse(

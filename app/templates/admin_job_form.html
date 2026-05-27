@@ -5,11 +5,12 @@
   <div>
     <p class="eyebrow">Admin</p>
     <h1>{{ "Edit job" if job else "Create job" }}</h1>
+    <p class="muted">Fill out the role details shown on the public board.</p>
   </div>
   <a class="button button-secondary" href="/admin">Back to dashboard</a>
 </section>
 
-<section class="card">
+<section class="card form-card">
   {% if error %}
   <div class="alert error">{{ error }}</div>
   {% endif %}

@@ -9,7 +9,10 @@
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="/">Job Board</a>
+      <a class="brand" href="/">
+        <span class="brand-mark">JB</span>
+        <span>Job Board</span>
+      </a>
       <nav class="nav">
         <a href="/jobs">Open Roles</a>
         <a href="/admin">Admin</a>
@@ -25,5 +28,12 @@
     </section>
     {% endblock %}
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>FastAPI + PostgreSQL + Redis</span>
+      <span>Lean take-home MVP</span>
+    </div>
+  </footer>
 </body>
 </html>

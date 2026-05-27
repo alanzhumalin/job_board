@@ -2,13 +2,17 @@
 
 {% block content %}
 <section class="detail-layout">
-  <article class="card">
+  <article class="card detail-card">
     <p class="eyebrow">Open role</p>
     <h1>{{ job.title }}</h1>
-    <p class="muted">{{ job.company }} · {{ job.location }} · {{ job.employment_type }}</p>
-    {% if job.salary_range %}
-    <p class="muted">Salary range: {{ job.salary_range }}</p>
-    {% endif %}
+    <div class="meta-row">
+      <span class="pill">{{ job.employment_type }}</span>
+      <span class="muted">{{ job.company }}</span>
+      <span class="muted">{{ job.location }}</span>
+      {% if job.salary_range %}
+      <span class="muted">{{ job.salary_range }}</span>
+      {% endif %}
+    </div>
 
     <h2>Description</h2>
     <p class="preserve-lines">{{ job.description }}</p>
@@ -17,7 +21,7 @@
     <p class="preserve-lines">{{ job.requirements }}</p>
   </article>
 
-  <aside class="card">
+  <aside class="card apply-card">
     <h2>Apply now</h2>
     <p class="muted">Submit a simple application for this role.</p>
     {% if error %}

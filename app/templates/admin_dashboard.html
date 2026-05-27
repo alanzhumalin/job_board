@@ -5,6 +5,7 @@
   <div>
     <p class="eyebrow">Admin</p>
     <h1>Dashboard</h1>
+    <p class="muted">Manage the active hiring pipeline from one place.</p>
   </div>
   <div class="action-row">
     <a class="button" href="/admin/jobs/new">Create job</a>
@@ -17,7 +18,10 @@
 
 <section class="split-grid">
   <article class="card">
-    <h2>Jobs</h2>
+    <div class="section-head">
+      <h2>Jobs</h2>
+      <span class="pill">{{ jobs|length }} total</span>
+    </div>
     {% if jobs %}
     <div class="table-wrap">
       <table>
@@ -56,7 +60,10 @@
   </article>
 
   <article class="card">
-    <h2>Recent applications</h2>
+    <div class="section-head">
+      <h2>Recent applications</h2>
+      <span class="pill">{{ applications|length }} recent</span>
+    </div>
     {% if applications %}
     <div class="list-stack">
       {% for application in applications %}

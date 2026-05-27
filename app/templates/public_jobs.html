@@ -2,10 +2,17 @@
 
 {% block content %}
 <section class="hero">
-  <div>
+  <div class="hero-copy">
     <p class="eyebrow">Hiring now</p>
     <h1>{{ page_title }}</h1>
     <p class="lede">Browse currently open roles and apply directly through the site.</p>
+  </div>
+  <div class="hero-panel">
+    <div class="hero-stat">
+      <strong>{{ jobs|length }}</strong>
+      <span>open roles on this page</span>
+    </div>
+    <p class="muted">Simple public job board with direct applications and a lightweight admin area.</p>
   </div>
 </section>
 
@@ -20,11 +27,14 @@
         </div>
         <span class="pill">{{ job.employment_type }}</span>
       </div>
-      <p>{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
+      <p class="job-snippet">{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
       {% if job.salary_range %}
       <p class="muted">Salary: {{ job.salary_range }}</p>
       {% endif %}
-      <a class="button" href="/jobs/{{ job.id }}">View details</a>
+      <div class="card-footer">
+        <span class="muted">Applications open</span>
+        <a class="button" href="/jobs/{{ job.id }}">View details</a>
+      </div>
     </article>
     {% endfor %}
   {% else %}

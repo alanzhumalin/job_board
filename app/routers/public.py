@@ -47,24 +47,8 @@ async def home(
 
 
 @router.get("/jobs")
-async def jobs_list(
-    request: Request,
-    page: int = 1,
-    limit: int = 20,
-    session: AsyncSession = Depends(db_session_dependency),
-    redis: Redis = Depends(get_redis),
-):
-    cached_jobs = await get_cached_jobs_list(redis, page=page, limit=limit)
-    jobs = cached_jobs
-    if jobs is None:
-        db_jobs = await crud.list_open_jobs(session, page=page, limit=limit)
-        jobs = [schemas.JobRead.model_validate(job).model_dump(mode="json") for job in db_jobs]
-        await set_cached_jobs_list(redis, page=page, limit=limit, jobs=jobs)
-
-    return templates.TemplateResponse(
-        "public_jobs.html",
-        {"request": request, "jobs": jobs, "page_title": "All Jobs"},
-    )
+async def jobs_list():
+    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/jobs/{job_id}")

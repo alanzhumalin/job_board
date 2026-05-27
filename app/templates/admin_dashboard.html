@@ -69,7 +69,7 @@
       <div class="recent-application-item">
         <strong>{{ application.full_name }}</strong>
         <span class="muted">{{ application.email }}</span>
-        <span class="muted">{{ application.job.title if application.job else "Unknown job" }}</span>
+        <span class="muted">{{ application.job_title or "Unknown job" }}</span>
       </div>
       {% endfor %}
     </div>

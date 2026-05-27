@@ -20,7 +20,7 @@
       <div class="application-card-header">
         <div>
           <h2>{{ application.full_name }}</h2>
-          <p class="muted">{{ application.job.title if application.job else "-" }}</p>
+          <p class="muted">{{ application.job_title or "-" }}</p>
         </div>
         <span class="pill">{{ application.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
       </div>
@@ -36,7 +36,7 @@
         </div>
         <div>
           <strong>Job</strong>
-          <span>{{ application.job.title if application.job else "-" }}</span>
+          <span>{{ application.job_title or "-" }}</span>
         </div>
       </div>
 

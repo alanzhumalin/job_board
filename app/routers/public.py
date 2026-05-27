@@ -76,12 +76,13 @@ async def job_detail(
     job = await crud.get_public_job(session, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
+    job_view = crud.job_to_view(job)
 
     return templates.TemplateResponse(
         "job_detail.html",
         {
             "request": request,
-            "job": job,
+            "job": job_view,
             "error": None,
             "form_data": {},
         },
@@ -102,6 +103,7 @@ async def apply_to_job(
     job = await crud.get_public_job(session, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found or no longer open.")
+    job_view = crud.job_to_view(job)
 
     form_data = {
         "full_name": full_name,
@@ -121,7 +123,7 @@ async def apply_to_job(
         return render_error(
             "job_detail.html",
             request,
-            job=job,
+            job=job_view,
             error=exc.errors()[0]["msg"],
             form_data=form_data,
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -135,7 +137,7 @@ async def apply_to_job(
         return render_error(
             "job_detail.html",
             request,
-            job=job,
+            job=job_view,
             error="A recent application attempt already exists for this email. Please wait a few minutes before trying again.",
             form_data=form_data,
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -147,7 +149,7 @@ async def apply_to_job(
         return render_error(
             "job_detail.html",
             request,
-            job=job,
+            job=job_view,
             error="You have already applied to this role with this email address.",
             form_data=form_data,
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -169,8 +171,9 @@ async def application_success(
     job = await crud.get_job_any_status(session, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
+    job_view = crud.job_to_view(job)
 
     return templates.TemplateResponse(
         "apply_success.html",
-        {"request": request, "job": job},
+        {"request": request, "job": job_view},
     )

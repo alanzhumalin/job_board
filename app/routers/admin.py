@@ -71,9 +71,11 @@ async def admin_dashboard(
     applications = await crud.list_recent_applications(
         session, limit=settings.recent_applications_limit
     )
+    jobs_view = [crud.job_to_view(job) for job in jobs]
+    applications_view = [crud.application_to_view(application) for application in applications]
     return templates.TemplateResponse(
         "admin_dashboard.html",
-        {"request": request, "jobs": jobs, "applications": applications},
+        {"request": request, "jobs": jobs_view, "applications": applications_view},
     )
 
 
@@ -228,9 +230,10 @@ async def admin_applications(
     session: AsyncSession = Depends(db_session_dependency),
 ):
     applications = await crud.list_all_applications(session)
+    applications_view = [crud.application_to_view(application) for application in applications]
     return templates.TemplateResponse(
         "admin_applications.html",
-        {"request": request, "applications": applications, "job": None},
+        {"request": request, "applications": applications_view, "job": None},
     )
 
 
@@ -244,8 +247,10 @@ async def admin_job_applications(
     job, applications = await crud.list_job_applications(session, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
+    job_view = crud.job_to_view(job)
+    applications_view = [crud.application_to_view(application) for application in applications]
 
     return templates.TemplateResponse(
         "admin_applications.html",
-        {"request": request, "applications": applications, "job": job},
+        {"request": request, "applications": applications_view, "job": job_view},
     )

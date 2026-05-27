@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +14,37 @@ logger = logging.getLogger(__name__)
 
 class DuplicateApplicationError(Exception):
     pass
+
+
+def job_to_view(job: Job) -> dict[str, Any]:
+    return {
+        "id": job.id,
+        "title": job.title,
+        "company": job.company,
+        "location": job.location,
+        "employment_type": job.employment_type,
+        "description": job.description,
+        "requirements": job.requirements,
+        "salary_range": job.salary_range,
+        "is_open": job.is_open,
+        "created_at": job.created_at,
+        "updated_at": job.updated_at,
+    }
+
+
+def application_to_view(application: Application) -> dict[str, Any]:
+    job = application.job
+    return {
+        "id": application.id,
+        "job_id": application.job_id,
+        "full_name": application.full_name,
+        "email": application.email,
+        "phone": application.phone,
+        "cover_letter": application.cover_letter,
+        "created_at": application.created_at,
+        "job_title": job.title if job else None,
+        "job_company": job.company if job else None,
+    }
 
 
 async def count_jobs(session: AsyncSession) -> int:

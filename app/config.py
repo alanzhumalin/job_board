@@ -26,8 +26,9 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_from_email: str | None = None
 
-    resend_api_key: str | None = None
-    resend_from_email: str | None = None
+    brevo_api_key: str | None = None
+    brevo_from_email: str | None = None
+    brevo_from_name: str = "Job Board"
 
     jobs_cache_ttl_seconds: int = 60
     apply_lock_ttl_seconds: int = 300

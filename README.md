@@ -27,8 +27,8 @@ A lean full-stack job board built with one FastAPI application serving both serv
 - Automatic sample seed:
   - on startup, if the `jobs` table is empty, one sample open job is created
 - Email confirmation with provider fallback:
-  - sends via Resend API if configured
-  - falls back to SMTP if Resend is not configured
+  - sends via Brevo API if configured
+  - falls back to SMTP if Brevo is not configured
   - logs the confirmation instead of crashing when no provider is configured
 
 ## Tech stack
@@ -87,19 +87,20 @@ Redis is used in two meaningful ways.
 
 After a successful application submission, the app attempts to send a confirmation email.
 
-- Preferred provider for Railway: Resend API
-  - `RESEND_API_KEY`
-  - `RESEND_FROM_EMAIL`
+- Preferred provider for Railway: Brevo API
+  - `BREVO_API_KEY`
+  - `BREVO_FROM_EMAIL`
+  - `BREVO_FROM_NAME`
 - SMTP fallback env vars:
   - `SMTP_HOST`
   - `SMTP_PORT`
   - `SMTP_USERNAME`
   - `SMTP_PASSWORD`
   - `SMTP_FROM_EMAIL`
-- If Resend is configured, the app sends through the Resend HTTPS API.
-- If Resend is not configured but SMTP values are present, the app falls back to SMTP.
-- If neither Resend nor SMTP is configured, the app logs the confirmation event and continues normally.
-- Railway outbound SMTP can fail with network errors, so Resend API is the preferred provider on Railway.
+- If Brevo is configured, the app sends through the Brevo HTTPS API.
+- If Brevo is not configured but SMTP values are present, the app falls back to SMTP.
+- If neither Brevo nor SMTP is configured, the app logs the confirmation event and continues normally.
+- Railway outbound SMTP can fail with network errors, so Brevo API is the preferred provider on Railway.
 
 ## Environment variables
 
@@ -118,8 +119,9 @@ SMTP_PORT=587
 SMTP_USERNAME=
 SMTP_PASSWORD=
 SMTP_FROM_EMAIL=
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=
+BREVO_API_KEY=
+BREVO_FROM_EMAIL=
+BREVO_FROM_NAME=Job Board
 APP_BASE_URL=http://localhost:8000
 ```
 
@@ -162,8 +164,10 @@ This project is designed for Railway without Docker.
    - `ADMIN_PASSWORD`
    - `JWT_SECRET`
    - `JWT_EXPIRE_HOURS`
+   - `BREVO_API_KEY`
+   - `BREVO_FROM_EMAIL`
+   - `BREVO_FROM_NAME`
    - optional SMTP values
-   - optional Resend values
    - `APP_BASE_URL`
 6. Attach the Railway PostgreSQL `DATABASE_URL` and Railway Redis `REDIS_URL` service variables to the FastAPI web service.
 7. Railway will install dependencies from `requirements.txt`.

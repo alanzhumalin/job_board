@@ -5,10 +5,7 @@ from email.message import EmailMessage
 from html import escape
 from typing import TypedDict
 
-try:
-    import resend
-except ImportError:  # pragma: no cover - safe fallback if dependency isn't installed yet
-    resend = None
+import httpx
 
 from app.config import get_settings
 from app.models import Application, Job
@@ -26,10 +23,10 @@ class ConfirmationEmailPayload(TypedDict):
     company: str
 
 
-def resend_is_configured() -> bool:
+def brevo_is_configured() -> bool:
     required_values = [
-        settings.resend_api_key,
-        settings.resend_from_email,
+        settings.brevo_api_key,
+        settings.brevo_from_email,
     ]
     return all(required_values)
 
@@ -54,12 +51,13 @@ def _build_text_body(payload: ConfirmationEmailPayload) -> str:
             f"Hi {payload['applicant_name']},",
             "",
             (
-                "We received your application for "
+                "Thank you for applying for "
                 f"{payload['job_title']} at {payload['company']}."
             ),
-            "Our team will review it and follow up if there is a fit.",
+            "We received your application and will review it soon.",
             "",
-            "Thanks for applying.",
+            "Best,",
+            settings.brevo_from_name,
         ]
     )
 
@@ -68,29 +66,46 @@ def _build_html_body(payload: ConfirmationEmailPayload) -> str:
     safe_name = escape(payload["applicant_name"])
     safe_title = escape(payload["job_title"])
     safe_company = escape(payload["company"])
+    safe_sender_name = escape(settings.brevo_from_name)
     return f"""
     <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
       <p>Hi {safe_name},</p>
-      <p>We received your application for <strong>{safe_title}</strong> at <strong>{safe_company}</strong>.</p>
-      <p>Our team will review it and follow up if there is a fit.</p>
-      <p>Thanks for applying.</p>
+      <p>Thank you for applying for <strong>{safe_title}</strong> at <strong>{safe_company}</strong>.</p>
+      <p>We received your application and will review it soon.</p>
+      <p>Best,<br>{safe_sender_name}</p>
     </div>
     """.strip()
 
 
-def _send_via_resend_sync(payload: ConfirmationEmailPayload) -> None:
-    if resend is None:
-        raise RuntimeError("resend package is not installed.")
-
-    resend.api_key = settings.resend_api_key
-    params: resend.Emails.SendParams = {
-        "from": settings.resend_from_email,
-        "to": [payload["applicant_email"]],
-        "subject": _build_subject(payload),
-        "html": _build_html_body(payload),
-        "text": _build_text_body(payload),
+async def _send_via_brevo(payload: ConfirmationEmailPayload) -> None:
+    headers = {
+        "api-key": settings.brevo_api_key or "",
+        "content-type": "application/json",
+        "accept": "application/json",
     }
-    resend.Emails.send(params)
+    body = {
+        "sender": {
+            "name": settings.brevo_from_name,
+            "email": settings.brevo_from_email,
+        },
+        "to": [
+            {
+                "email": payload["applicant_email"],
+                "name": payload["applicant_name"],
+            }
+        ],
+        "subject": _build_subject(payload),
+        "htmlContent": _build_html_body(payload),
+        "textContent": _build_text_body(payload),
+    }
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        response = await client.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers=headers,
+            json=body,
+        )
+        response.raise_for_status()
 
 
 def _send_via_smtp_sync(payload: ConfirmationEmailPayload) -> None:
@@ -117,18 +132,18 @@ async def send_application_confirmation(application: Application, job: Job) -> N
         "company": job.company,
     }
 
-    if resend_is_configured():
+    if brevo_is_configured():
         logger.info(
-            "Sending confirmation email via Resend for application_id=%s email=%s",
+            "Sending confirmation email via Brevo for application_id=%s email=%s",
             payload["application_id"],
             payload["applicant_email"],
         )
         try:
-            await asyncio.to_thread(_send_via_resend_sync, payload)
+            await _send_via_brevo(payload)
             return
         except Exception:
             logger.exception(
-                "Failed to send confirmation email via Resend for application_id=%s",
+                "Failed to send confirmation email via Brevo for application_id=%s",
                 payload["application_id"],
             )
 

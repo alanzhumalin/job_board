@@ -100,6 +100,7 @@ After a successful application submission, the app attempts to send a confirmati
 Copy `.env.example` to `.env` and set the following:
 
 ```env
+APP_ENV=local
 DATABASE_URL=
 REDIS_URL=
 ADMIN_USERNAME=admin
@@ -113,6 +114,8 @@ SMTP_PASSWORD=
 SMTP_FROM_EMAIL=
 APP_BASE_URL=http://localhost:8000
 ```
+
+Warning: do not deploy with placeholder `ADMIN_PASSWORD` or `JWT_SECRET` values.
 
 ## Local run instructions
 
@@ -144,6 +147,7 @@ This project is designed for Railway without Docker.
 3. Add a Railway PostgreSQL service.
 4. Add a Railway Redis service.
 5. Set environment variables in the web service:
+   - `APP_ENV=production`
    - `DATABASE_URL`
    - `REDIS_URL`
    - `ADMIN_USERNAME`
@@ -152,8 +156,9 @@ This project is designed for Railway without Docker.
    - `JWT_EXPIRE_HOURS`
    - optional SMTP values
    - `APP_BASE_URL`
-6. Railway will install dependencies from `requirements.txt`.
-7. `railway.json` config starts the app with:
+6. Attach the Railway PostgreSQL `DATABASE_URL` and Railway Redis `REDIS_URL` service variables to the FastAPI web service.
+7. Railway will install dependencies from `requirements.txt`.
+8. `railway.json` config starts the app with:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -166,6 +171,17 @@ No `Dockerfile` or `docker-compose.yml` is required.
 - Public app: `https://your-app-url.railway.app`
 - Admin login: `https://your-app-url.railway.app/admin/login`
 - API docs: `https://your-app-url.railway.app/docs`
+
+## Submission checklist
+
+- GitHub repo URL
+- Live frontend URL
+- Backend `/docs` URL
+- Railway dashboard screenshot showing the FastAPI, PostgreSQL, and Redis services
+
+## Known limitations
+
+- Admin POST forms currently do not include CSRF tokens. For production, CSRF protection should be added for cookie-authenticated form submissions.
 
 ## What I would improve next
 

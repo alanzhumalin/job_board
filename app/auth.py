@@ -10,12 +10,16 @@ settings = get_settings()
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
+    if not settings.admin_password:
+        return False
     username_match = hmac.compare_digest(username, settings.admin_username)
     password_match = hmac.compare_digest(password, settings.admin_password)
     return username_match and password_match
 
 
 def create_access_token(subject: str) -> str:
+    if not settings.jwt_secret:
+        raise ValueError("JWT_SECRET is not configured.")
     now = datetime.now(UTC)
     payload = {
         "sub": subject,
@@ -26,6 +30,8 @@ def create_access_token(subject: str) -> str:
 
 
 def decode_token(token: str) -> dict:
+    if not settings.jwt_secret:
+        raise ValueError("JWT_SECRET is not configured.")
     return jwt.decode(
         token,
         settings.jwt_secret,

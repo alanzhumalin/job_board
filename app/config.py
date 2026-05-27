@@ -1,19 +1,21 @@
 from functools import lru_cache
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "Job Board"
-    app_env: str = "development"
+    app_env: str = "local"
     app_base_url: str = "http://localhost:8000"
 
     database_url: str
     redis_url: str
 
     admin_username: str = "admin"
-    admin_password: str = "change-me"
+    admin_password: str | None = None
 
-    jwt_secret: str = "change-me"
+    jwt_secret: str | None = None
     jwt_expire_hours: int = 12
     jwt_algorithm: str = "HS256"
     jwt_cookie_name: str = "admin_token"
@@ -35,6 +37,35 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if self.app_env.lower() != "production":
+            return self
+
+        admin_password = (self.admin_password or "").strip()
+        jwt_secret = (self.jwt_secret or "").strip()
+
+        if not admin_password:
+            raise ValueError(
+                "ADMIN_PASSWORD must be set when APP_ENV=production."
+            )
+        if not jwt_secret:
+            raise ValueError("JWT_SECRET must be set when APP_ENV=production.")
+
+        weak_passwords = {"change-me", "changeme", "password", "admin"}
+        weak_secrets = {"change-me", "changeme", "secret"}
+
+        if admin_password.lower() in weak_passwords:
+            raise ValueError(
+                "ADMIN_PASSWORD uses a placeholder or weak value. Set a strong password when APP_ENV=production."
+            )
+        if jwt_secret.lower() in weak_secrets:
+            raise ValueError(
+                "JWT_SECRET uses a placeholder or weak value. Set a strong secret when APP_ENV=production."
+            )
+
+        return self
 
 
 @lru_cache

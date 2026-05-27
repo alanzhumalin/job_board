@@ -15,8 +15,14 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
-def render_error(template_name: str, request: Request, **context):
-    return templates.TemplateResponse(template_name, {"request": request, **context})
+def render_error(
+    template_name: str, request: Request, status_code: int = 200, **context
+):
+    return templates.TemplateResponse(
+        template_name,
+        {"request": request, **context},
+        status_code=status_code,
+    )
 
 
 @router.get("/")
@@ -116,6 +122,7 @@ async def apply_to_job(
             job=job,
             error=exc.errors()[0]["msg"],
             form_data=form_data,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     normalized_email = payload.email.lower()
@@ -129,6 +136,7 @@ async def apply_to_job(
             job=job,
             error="A recent application attempt already exists for this email. Please wait a few minutes before trying again.",
             form_data=form_data,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     try:
@@ -140,6 +148,7 @@ async def apply_to_job(
             job=job,
             error="You have already applied to this role with this email address.",
             form_data=form_data,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     await send_application_confirmation(application, job)
